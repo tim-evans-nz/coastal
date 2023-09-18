@@ -1,4 +1,4 @@
-use coastal::{api, coast};
+use coastal::coast;
 
 #[coast]
 pub const VERSION_MAJOR: u32 = 1;
@@ -12,7 +12,7 @@ pub fn add(a: i32, b: i32) -> i32 {
     a + b
 }
 
-api! {
+coastal::api! {
     const VERSION_MAJOR;
     const VERSION_MINOR;
     const VERSION;

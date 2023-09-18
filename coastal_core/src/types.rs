@@ -27,19 +27,19 @@ pub fn convert_builtin_arg(name: &Ident, arg_type: &Type) -> Option<ConvertArg> 
             ..
         }) => convert_fn_ptr(name, inputs, output, abi.as_ref(), unsafety.is_some()),
         Type::Group(TypeGroup { elem, .. }) | Type::Paren(TypeParen { elem, .. }) => {
-            convert_builtin_arg(name, &elem)
+            convert_builtin_arg(name, elem)
         }
         Type::Path(TypePath { qself: Some(_), .. }) => None, // <T as Trait>::U
         Type::Path(TypePath { path, .. }) => convert_path_arg(name, path),
         Type::Ptr(TypePtr {
             mutability, elem, ..
-        }) => convert_ptr_arg(name, &elem, mutability.is_some()),
+        }) => convert_ptr_arg(name, elem, mutability.is_some()),
         Type::Reference(TypeReference {
             lifetime,
             mutability,
             elem,
             ..
-        }) => convert_ref_arg(name, lifetime.as_ref(), &elem, mutability.is_some()),
+        }) => convert_ref_arg(name, lifetime.as_ref(), elem, mutability.is_some()),
         Type::Slice(_) => None,       // bare slice [T]
         Type::ImplTrait(_) => None,   // impl Trait
         Type::TraitObject(_) => None, // dyn Trait
@@ -134,7 +134,7 @@ fn convert_path_arg(name: &Ident, type_path: &Path) -> Option<ConvertArg> {
     let type_string = type_path.into_token_stream().to_string();
     if let Some(r) = NO_CONVERSION
         .iter()
-        .find(|(n, _, _)| n == &&type_string)
+        .find(|(n, _, _)| n == &type_string)
         .map(|(_, p, c)| {
             let path = TokenStream::from_str(p).unwrap();
             ConvertArg {
@@ -148,7 +148,7 @@ fn convert_path_arg(name: &Ident, type_path: &Path) -> Option<ConvertArg> {
     }
     if let Some(r) = NON_ZERO
         .iter()
-        .find(|(n, _, _)| n == &&type_string)
+        .find(|(n, _, _)| n == &type_string)
         .map(|(_, r, c)| {
             let raw_type = Ident::new(r, Span::call_site());
             ConvertArg {
@@ -212,7 +212,7 @@ fn convert_path_return(type_path: &Path) -> Option<ConvertReturn> {
     let type_string = type_path.into_token_stream().to_string();
     ACCEPT
         .iter()
-        .find(|(n, _, _)| n == &&type_string)
+        .find(|(n, _, _)| n == &type_string)
         .map(|(n, r, c)| ConvertReturn {
             before: quote! {},
             after: if n == r {

@@ -5,9 +5,8 @@ use syn::{
 };
 
 use crate::{
-    api::{Constant, ConstantValue, Function},
-    errors::format_err,
-    state::State,
+    api::{Constant, ConstantValue, Function, State},
+    format_err,
 };
 
 /// Implementation for `coastal_derive::coast!`.

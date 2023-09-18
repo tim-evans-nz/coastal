@@ -2,7 +2,7 @@ use macro_state::{proc_read_state, proc_write_state};
 use serde::{de::DeserializeOwned, Serialize};
 use syn::{Error, Ident};
 
-use crate::errors::format_err;
+use crate::format_err;
 
 pub trait State: Serialize + DeserializeOwned {
     const TYPE_NAME: &'static str;
