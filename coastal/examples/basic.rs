@@ -1,18 +1,18 @@
-use coastal::{coastal, coastal_impl};
+use coastal::{api, coast};
 
-#[coastal]
+#[coast]
 pub const VERSION_MAJOR: u32 = 1;
-#[coastal]
+#[coast]
 pub const VERSION_MINOR: u32 = 0;
-#[coastal]
+#[coast]
 pub const VERSION: &str = "1.0";
 
-#[coastal]
+#[coast]
 pub fn add(a: i32, b: i32) -> i32 {
     a + b
 }
 
-coastal_impl! {
+api! {
     const VERSION_MAJOR;
     const VERSION_MINOR;
     const VERSION;

@@ -1,0 +1,17 @@
+[package]
+name = "coastal"
+description = "C wrapper generation for Rust"
+edition = "2021"
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+
+[dependencies]
+coastal_core = { path = "../coastal_core" }
+coastal_derive = { path = "../coastal_derive" }
+
+[[example]]
+name = "basic"
+crate-type = ["cdylib"]

@@ -6,55 +6,81 @@ use syn::{
 
 use crate::{
     api::{Constant, ConstantValue, Function},
-    errors::err,
+    errors::format_err,
     state::State,
 };
 
-pub fn attr_macro_coastal(attr: TokenStream, input: TokenStream) -> Result<TokenStream, Error> {
+/// Implementation for `coastal_derive::coast!`.
+pub fn coast(attr: TokenStream, input: TokenStream) -> Result<TokenStream, Error> {
     if !attr.is_empty() {
-        err!(attr, "Coastal attribute macro does not take arguments");
+        return Err(format_err!(
+            @attr, "Coastal attribute macro does not take arguments"
+        ));
     }
     let item: Item = syn::parse2(input.clone())?;
     match item {
         Item::Const(item_const) => handle_const(item_const)?,
         Item::Fn(item_fn) => handle_fn(item_fn)?,
-        _ => err!(
-            item,
-            "#[coastal] only supports 'const' and 'fn' items currently"
-        ),
+        _ => {
+            return Err(
+                format_err!(@item, "#[coast] only supports 'const' and 'fn' items currently"),
+            )
+        }
     }
     Ok(input)
 }
 
 fn handle_fn(item_fn: ItemFn) -> Result<(), Error> {
     if let Some(async_keyword) = item_fn.sig.asyncness {
-        err!(async_keyword, "Coastal does not support async functions");
+        return Err(format_err!(
+            @async_keyword,
+            "Coastal does not support async functions"
+        ));
     }
     if item_fn.sig.generics.lt_token.is_some() {
-        err!(
-            item_fn.sig.generics,
-            "Coastal does not support async functions"
-        );
+        return Err(format_err!(@item_fn.sig.generics, "Coastal does not support async functions"));
     }
     let mut arguments = Vec::new();
     for arg in item_fn.sig.inputs.iter() {
         match arg {
             FnArg::Receiver(token) => {
-                err!(token, "Coastal does not yet support associated methods")
+                return Err(format_err!(
+                    @token, "Coastal does not yet support associated methods"
+                ));
             }
             FnArg::Typed(PatType { pat, ty, .. }) => {
                 let name = match pat.as_ref() {
                     Pat::Ident(pat_ident) => pat_ident.ident.to_string(),
-                    token => err!(token, "Coastal does not support pattern arguments"),
+                    token => {
+                        return Err(format_err!(
+                            @token, "Coastal does not support pattern arguments"
+                        ))
+                    }
                 };
                 match ty.as_ref() {
                     Type::ImplTrait(TypeImplTrait { impl_token, .. }) => {
-                        err!(impl_token, "Coastal does not support 'impl' arguments")
+                        return Err(format_err!(
+                            @impl_token, "Coastal does not support 'impl' arguments"
+                        ));
                     }
-                    Type::Infer(t) => err!(t, "Coastal does not support inferred argument type"),
-                    Type::Macro(t) => err!(t, "Coastal does not support macro argument types"),
-                    Type::Never(t) => err!(t, "Coastal does not support the '!' argument type"),
-                    Type::TraitObject(t) => err!(t, "Coastal does not support 'dyn' arguments"),
+                    Type::Infer(t) => {
+                        return Err(format_err!(
+                            @t, "Coastal does not support inferred argument type"
+                        ))
+                    }
+                    Type::Macro(t) => {
+                        return Err(format_err!(
+                            @t, "Coastal does not support macro argument types"
+                        ))
+                    }
+                    Type::Never(t) => {
+                        return Err(
+                            format_err!(@t, "Coastal does not support the '!' argument type"),
+                        )
+                    }
+                    Type::TraitObject(t) => {
+                        return Err(format_err!(@t, "Coastal does not support 'dyn' arguments"))
+                    }
                     _ => (),
                 }
                 arguments.push((name, ty.to_token_stream().to_string()));
@@ -72,7 +98,10 @@ fn handle_fn(item_fn: ItemFn) -> Result<(), Error> {
 
 fn handle_const(item_const: ItemConst) -> Result<(), Error> {
     let Expr::Lit(ExprLit { lit, .. }) = item_const.expr.as_ref() else {
-        err!(item_const.ty, "Coastal constants must have a literal value");
+        return Err(format_err!(
+            @item_const.ty,
+            "Coastal constants must have a literal value"
+        ));
     };
     let value = match (&item_const.ty.to_token_stream().to_string()[..], lit) {
         ("c_char", Lit::Byte(l)) => ConstantValue::CChar(l.value()),
@@ -90,10 +119,12 @@ fn handle_const(item_const: ItemConst) -> Result<(), Error> {
         ("f64", Lit::Float(l)) => ConstantValue::F32(l.base10_parse()?),
         ("& str", Lit::Str(l)) => ConstantValue::Str(l.value()),
         ("& [u8]", Lit::ByteStr(l)) => ConstantValue::Bytes(l.value()),
-        _ => err!(
-            item_const.ty,
-            "Coastal constants can only be c_char, int, float, bytes, or string types"
-        ),
+        _ => {
+            return Err(format_err!(
+                @item_const.ty,
+                "Coastal constants can only be c_char, int, float, bytes, or string types"
+            ))
+        }
     };
     Constant {
         name: item_const.ident.to_string(),

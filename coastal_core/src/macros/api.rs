@@ -3,11 +3,12 @@ use syn::{parse::Parse, parse2, token, Error, Ident, Lit};
 
 use crate::{
     api::{Api, Constant, Function},
-    errors::err,
+    errors::format_err,
     state::State,
 };
 
-pub fn macro_coastal_impl(input: TokenStream) -> Result<TokenStream, Error> {
+/// Implementation for `coastal_derive::coast!`.
+pub fn api(input: TokenStream) -> Result<TokenStream, Error> {
     let api: Api = parse2(input)?;
     api.rust_wrapper()
 }
@@ -37,7 +38,12 @@ impl Parse for Api {
                     // "prefix" => api
                     //     .set_prefix(&value_lit.value())
                     //     .map_err(|s| Error::new_spanned(value_lit, s))?,
-                    other => err!(ident, "Coastal did not recognise option '{other}'"),
+                    other => {
+                        return Err(format_err!(
+                            @ident,
+                            "Coastal did not recognise option '{other}'"
+                        ))
+                    }
                 }
             }
         }

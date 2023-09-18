@@ -53,7 +53,6 @@ impl Api {
             .find_map(|ac| ac(name, arg_type))
             .ok_or_else(|| {
                 format_err!(
-                    call_site,
                     "can't convert argument '{name}: {}'",
                     arg_type.to_token_stream().to_string()
                 )
@@ -66,7 +65,6 @@ impl Api {
             .find_map(|rc| rc(return_type))
             .ok_or_else(|| {
                 format_err!(
-                    call_site,
                     "can't convert return type '{}'",
                     return_type.to_token_stream().to_string()
                 )
@@ -94,7 +92,6 @@ pub struct Constant {
 }
 
 impl Constant {
-    #[allow(dead_code)]
     pub fn c_header(&self, f: &mut impl Write) -> Result<(), std::io::Error> {
         let name = format!("PREFIX_{}", self.name.to_case(Case::ScreamingSnake));
         match &self.value {
