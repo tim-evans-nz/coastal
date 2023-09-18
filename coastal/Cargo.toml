@@ -10,7 +10,7 @@ repository.workspace = true
 
 [dependencies]
 coastal_core = { path = "../coastal_core" }
-coastal_derive = { path = "../coastal_derive" }
+coastal_macros = { path = "../coastal_macros" }
 
 [[example]]
 name = "basic"

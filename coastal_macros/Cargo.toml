@@ -1,5 +1,5 @@
 [package]
-name = "coastal_derive"
+name = "coastal_macros"
 description = "Proc-macros for Coastal"
 edition = "2021"
 version.workspace = true
