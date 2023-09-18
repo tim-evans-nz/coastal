@@ -13,7 +13,9 @@ use crate::types::{convert_builtin_arg, convert_builtin_return};
 
 #[derive(Default)]
 pub struct Api {
-    pub prefix: String,
+    pub type_prefix: String,
+    pub function_prefix: String,
+    pub constant_prefix: String,
     pub constants: Vec<Constant>,
     pub functions: Vec<Function>,
     pub arg_converters: Vec<Box<dyn Fn(&Ident, &Type) -> Option<ConvertArg>>>,
@@ -22,8 +24,11 @@ pub struct Api {
 
 impl Api {
     pub fn new() -> Self {
+        let pkg_name = std::env::var("CARGO_PKG_NAME").unwrap_or_else(|_| "package".to_owned());
         Self {
-            prefix: "prefix".to_owned(), // todo
+            type_prefix: pkg_name.to_case(Case::Pascal),
+            function_prefix: format!("{}_", pkg_name.to_case(Case::Snake)),
+            constant_prefix: format!("{}_", pkg_name.to_case(Case::UpperSnake)),
             arg_converters: vec![Box::new(convert_builtin_arg)],
             return_converters: vec![Box::new(convert_builtin_return)],
             ..Default::default()
@@ -106,7 +111,13 @@ impl Constant {
             ConstantValue::U64(val) => writeln!(f, "#define {name} {val}ull"),
             ConstantValue::F32(val) => writeln!(f, "#define {name} {val}f"),
             ConstantValue::F64(val) => writeln!(f, "#define {name} {val}"),
-            ConstantValue::String(val) => writeln!(f, "#define {name} {val:?}"),
+            ConstantValue::Str(val) => writeln!(f, "#define {name} {val:?}"),
+            ConstantValue::Bytes(val) => {
+                let string_constant =
+                    String::from_utf8(val.iter().copied().flat_map(u8::escape_ascii).collect())
+                        .expect("valid utf8");
+                writeln!(f, "#define {name} \"{string_constant}\"")
+            }
         }
     }
 }
@@ -128,7 +139,8 @@ pub enum ConstantValue {
     U64(i64),
     F32(f32),
     F64(f64),
-    String(String),
+    Str(String),
+    Bytes(Vec<u8>),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -141,7 +153,10 @@ pub struct Function {
 impl Function {
     pub fn rust_wrapper(&self, api: &Api) -> Result<TokenStream, Error> {
         let name = Ident::new(&self.name, Span::call_site());
-        let wrapped_name = Ident::new(&format!("{}_{}", api.prefix, self.name), Span::call_site());
+        let wrapped_name = Ident::new(
+            &format!("{}{}", api.function_prefix, self.name),
+            Span::call_site(),
+        );
         let mut declarations = TokenStream::new();
         let mut call = TokenStream::new();
         for (name, ty) in &self.arguments {

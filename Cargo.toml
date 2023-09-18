@@ -1,12 +1,12 @@
 [package]
 name = "coastal"
 version = "0.1.0"
-authors = ["Tim Evans"]
+authors = ["Tim Evans <t.evans.638@gmail.com>"]
 license = "MIT OR Apache-2.0"
 edition = "2021"
 description = "C wrapper generation for Rust"
-homepage = "https://github.com/<my name here>/coastal"
-repository = "https://github.com/<my name here>/coastal"
+homepage = "https://github.com/tim-evans-nz/coastal"
+repository = "https://github.com/tim-evans-nz/coastal"
 
 [lib]
 proc-macro = true
